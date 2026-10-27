@@ -191,6 +191,14 @@ struct FileRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                if file.hasPendingRename {
+                    Text("→ \(file.plannedName ?? "needs a name")")
+                        .font(.caption)
+                        .foregroundStyle(file.plannedName == nil ? .red : .orange)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help("The file is renamed when you save")
+                }
             }
             Spacer()
             if file.isDirty {
@@ -213,7 +221,10 @@ struct TagEditorView: View {
         Form {
             Section {
                 HStack(alignment: .top, spacing: 20) {
-                    ArtworkWell(artwork: $file.fields.artwork)
+                    ArtworkWell(
+                        artwork: $file.fields.artwork,
+                        suggestedVideoID: YouTube.videoID(in: file.name, comment: file.fields.comment)
+                    )
                     VStack(spacing: 10) {
                         TextField("Title", text: $file.fields.title)
                         ArtistField(text: $file.fields.artist, library: library)
@@ -234,9 +245,61 @@ struct TagEditorView: View {
                     .labelsHidden()
                     .lineLimit(3...8)
             }
+            Section("File") {
+                Toggle("Rename the file when saving", isOn: renamesFile)
+                    .help("Give the file a new name when you save")
+                if file.rename != .keep {
+                    Picker("New name", selection: renameMode) {
+                        Text("Artist - Title").tag(RenameMode.fromTags)
+                        Text("Custom").tag(RenameMode.custom)
+                    }
+                    .pickerStyle(.segmented)
+                    if case .custom = file.rename {
+                        TextField("File name", text: customName, prompt: Text(file.baseName))
+                    }
+                    LabeledContent("Saved as") {
+                        if let plannedName = file.plannedName {
+                            Text(plannedName)
+                                .textSelection(.enabled)
+                        } else {
+                            Text(file.rename == .fromTags ? "Needs a title" : "Needs a name")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+            }
         }
         .formStyle(.grouped)
         .navigationTitle(file.name)
+    }
+
+    private enum RenameMode: Hashable {
+        case fromTags, custom
+    }
+
+    private var renamesFile: Binding<Bool> {
+        Binding {
+            file.rename != .keep
+        } set: { isOn in
+            file.rename = isOn ? .fromTags : .keep
+        }
+    }
+
+    private var renameMode: Binding<RenameMode> {
+        Binding {
+            file.rename == .fromTags ? .fromTags : .custom
+        } set: { mode in
+            // Switching to Custom starts from the name Artist - Title would give, so it only needs a tweak.
+            file.rename = mode == .fromTags ? .fromTags : .custom(file.plannedBaseName ?? file.baseName)
+        }
+    }
+
+    private var customName: Binding<String> {
+        Binding {
+            if case .custom(let name) = file.rename { name } else { "" }
+        } set: { name in
+            file.rename = .custom(name)
+        }
     }
 }
 
@@ -261,7 +324,10 @@ struct ArtworkWell: View {
     @Binding var artwork: Artwork?
     /// The selected files have different cover art.
     var isMixed = false
+    /// Video ID found in the file name or comment, to fill in the YouTube link.
+    var suggestedVideoID: String?
     @State private var isImporting = false
+    @State private var isPickingYouTube = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -294,11 +360,16 @@ struct ArtworkWell: View {
             HStack {
                 Button("Choose…") { isImporting = true }
                     .help("Pick an image file to use as cover art")
+                Button("YouTube…") { isPickingYouTube = true }
+                    .help("Use a YouTube video's thumbnail as cover art")
                 Button("Remove") { artwork = nil }
                     .disabled(artwork == nil && !isMixed)
                     .help("Remove the cover art")
             }
             .controlSize(.small)
+        }
+        .sheet(isPresented: $isPickingYouTube) {
+            YouTubeThumbnailSheet(artwork: $artwork, link: suggestedVideoID.map(YouTube.watchURL) ?? "")
         }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.image]) { result in
             switch result {

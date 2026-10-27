@@ -6,6 +6,8 @@ import SwiftUI
 struct BulkEditorView: View {
     let files: [EditableFile]
     let library: Library
+    @State private var cropThumbnails = true
+    @State private var isFetchingThumbnails = false
 
     var body: some View {
         Form {
@@ -40,10 +42,52 @@ struct BulkEditorView: View {
                     Button("Use File Names") { library.useFileNamesAsTitles(files) }
                         .help("Set each title to its file name, without .mp3")
                 }
+                LabeledContent("Cover art") {
+                    HStack {
+                        if isFetchingThumbnails {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Toggle("Square", isOn: $cropThumbnails)
+                            .help("Crop each 16:9 thumbnail to a square, keeping the middle")
+                        Button("YouTube Thumbnails") {
+                            isFetchingThumbnails = true
+                            Task {
+                                await library.useYouTubeThumbnails(files, cropToSquare: cropThumbnails)
+                                isFetchingThumbnails = false
+                            }
+                        }
+                        .disabled(isFetchingThumbnails)
+                        .help("Give each file its own video's thumbnail, using the [video ID] in its file name or a YouTube link in its comment")
+                    }
+                }
+            }
+            Section("File names") {
+                Toggle("Rename the files to Artist - Title when saving", isOn: renamesFromTags)
+                    .help("Each file is named after its own artist and title when you save")
+                if files.contains(where: { $0.rename == .fromTags }) {
+                    let missing = files.count { $0.rename == .fromTags && $0.plannedName == nil }
+                    if missing > 0 {
+                        Text("\(missing) of these files have no title yet, so they can't be renamed.")
+                            .foregroundStyle(.red)
+                    } else if let example = files.first?.plannedName {
+                        LabeledContent("For example", value: example)
+                    }
+                }
             }
         }
         .formStyle(.grouped)
         .navigationTitle("\(files.count) Files")
+    }
+
+    private var renamesFromTags: Binding<Bool> {
+        Binding {
+            files.allSatisfy { $0.rename == .fromTags }
+        } set: { isOn in
+            for file in files {
+                file.rename = isOn ? .fromTags : .keep
+            }
+        }
     }
 
     private func allEqual<Value: Equatable>(_ keyPath: KeyPath<TagFields, Value>) -> Bool {

@@ -2,15 +2,65 @@ import AppKit
 import ID3Kit
 import Observation
 
+/// What happens to the file name when the file is saved.
+enum FileRename: Equatable {
+    case keep
+    /// A name typed by the user, without the extension.
+    case custom(String)
+    /// "Artist - Title", or just the title when there is no artist.
+    case fromTags
+}
+
+enum RenameError: LocalizedError, Equatable {
+    case emptyName
+    case needsTitle
+    case alreadyExists(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyName: "The new file name is empty."
+        case .needsTitle: "Naming the file after its tags needs a title."
+        case .alreadyExists(let name): "A file named \"\(name)\" already exists in that folder."
+        }
+    }
+}
+
 @Observable
 final class EditableFile: Identifiable {
     let id = UUID()
-    let url: URL
+    private(set) var url: URL
     private(set) var saved: TagFields
     var fields: TagFields
+    var rename = FileRename.keep
 
-    var isDirty: Bool { fields != saved }
+    var isDirty: Bool { fields != saved || hasPendingRename }
     var name: String { url.lastPathComponent }
+    var baseName: String { url.deletingPathExtension().lastPathComponent }
+
+    /// The name (without extension) the file gets when saved. Nil when the rename has no usable name.
+    var plannedBaseName: String? {
+        switch rename {
+        case .keep: baseName
+        case .custom(let name): Self.safeFileName(name)
+        case .fromTags: tagBasedName.flatMap(Self.safeFileName)
+        }
+    }
+
+    var plannedName: String? {
+        plannedBaseName.map { url.pathExtension.isEmpty ? $0 : "\($0).\(url.pathExtension)" }
+    }
+
+    /// A rename that changes the name, or one that cannot be done (which saving then reports).
+    var hasPendingRename: Bool {
+        plannedBaseName != baseName
+    }
+
+    var tagBasedName: String? {
+        let artist = fields.artist.trimmingCharacters(in: .whitespaces)
+        let title = fields.title.trimmingCharacters(in: .whitespaces)
+        guard !title.isEmpty else { return nil }
+        return artist.isEmpty ? title : "\(artist) - \(title)"
+    }
 
     init(url: URL) throws {
         self.url = url
@@ -19,15 +69,59 @@ final class EditableFile: Identifiable {
         self.fields = fields
     }
 
+    /// Writes the tags, then renames the file. When the rename fails the tags are already saved
+    /// and the rename stays pending, so the user can fix the name and save again.
     func save() throws {
-        try ID3.write(fields, to: url)
-        // Show what is really in the file now, not what we meant to write.
-        saved = try ID3.readFields(from: url)
-        fields = saved
+        if fields != saved {
+            try ID3.write(fields, to: url)
+            // Show what is really in the file now, not what we meant to write.
+            saved = try ID3.readFields(from: url)
+            fields = saved
+        }
+        if hasPendingRename {
+            try applyRename()
+        }
+        rename = .keep
     }
 
     func revert() {
         fields = saved
+        rename = .keep
+    }
+
+    private func applyRename() throws {
+        guard let plannedName else {
+            throw rename == .fromTags ? RenameError.needsTitle : RenameError.emptyName
+        }
+        let target = url.deletingLastPathComponent().appending(path: plannedName)
+        // A change in letter case only points at the same file on a case-insensitive disk.
+        if FileManager.default.fileExists(atPath: target.path), !Self.isSameFile(url, target) {
+            throw RenameError.alreadyExists(plannedName)
+        }
+        try FileManager.default.moveItem(at: url, to: target)
+        url = target
+    }
+
+    /// Replaces characters macOS does not allow in a file name, and trims what Finder would hide or reject.
+    static func safeFileName(_ name: String) -> String? {
+        var name = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+        name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        while name.hasPrefix(".") {
+            name.removeFirst()
+        }
+        // File names are limited to 255 bytes; leave room for the extension.
+        while name.utf8.count > 240 {
+            name.removeLast()
+        }
+        name = name.trimmingCharacters(in: .whitespaces)
+        return name.isEmpty ? nil : name
+    }
+
+    private static func isSameFile(_ first: URL, _ second: URL) -> Bool {
+        let key = URLResourceKey.fileResourceIdentifierKey
+        guard let a = try? first.resourceValues(forKeys: [key]).fileResourceIdentifier,
+              let b = try? second.resourceValues(forKeys: [key]).fileResourceIdentifier else { return false }
+        return a.isEqual(b)
     }
 
     func matches(_ search: String) -> Bool {
@@ -145,7 +239,28 @@ final class Library {
     /// Uses each file name, without ".mp3", as the title.
     func useFileNamesAsTitles(_ files: [EditableFile]) {
         for file in files {
-            file.fields.title = file.url.deletingPathExtension().lastPathComponent
+            file.fields.title = file.baseName
+        }
+    }
+
+    /// Gives each file its own YouTube thumbnail as cover art, using the video ID in its file name
+    /// ("Title [ID].mp3", as yt-dlp names them) or a YouTube link in its comment.
+    /// Files without an ID, or whose download fails, are listed in the error message.
+    func useYouTubeThumbnails(_ files: [EditableFile], cropToSquare: Bool) async {
+        var failures: [String] = []
+        for file in files {
+            guard let videoID = YouTube.videoID(in: file.name, comment: file.fields.comment) else {
+                failures.append("\(file.name): no YouTube video ID in the file name or comment")
+                continue
+            }
+            do {
+                file.fields.artwork = try await Artwork.youTubeThumbnail(videoID: videoID, cropToSquare: cropToSquare)
+            } catch {
+                failures.append("\(file.name): \(error.localizedDescription)")
+            }
+        }
+        if !failures.isEmpty {
+            errorMessage = "Some thumbnails were not set:\n" + failures.joined(separator: "\n")
         }
     }
 
