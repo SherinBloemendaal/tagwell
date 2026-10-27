@@ -9,7 +9,7 @@ struct TagwellApp: App {
         Window("Tagwell", id: "main") {
             ContentView(library: appDelegate.library)
         }
-        .defaultSize(width: 900, height: 620)
+        .defaultSize(width: 1100, height: 680)
         .commands {
             LibraryCommands(library: appDelegate.library)
         }
@@ -55,18 +55,16 @@ struct LibraryCommands: Commands {
                 .keyboardShortcut("o")
         }
         CommandGroup(replacing: .saveItem) {
-            Button("Save") {
-                if let file = library.selectedFile { library.save(file) }
-            }
-            .keyboardShortcut("s")
-            .disabled(library.selectedFile?.isDirty != true)
+            Button("Save") { library.saveSelected() }
+                .keyboardShortcut("s")
+                .disabled(!library.selectionHasUnsavedChanges)
 
             Button("Save All") { library.saveAll() }
                 .keyboardShortcut("s", modifiers: [.command, .option])
                 .disabled(!library.hasUnsavedChanges)
 
-            Button("Revert") { library.selectedFile?.revert() }
-                .disabled(library.selectedFile?.isDirty != true)
+            Button("Revert") { library.revertSelected() }
+                .disabled(!library.selectionHasUnsavedChanges)
         }
     }
 }
