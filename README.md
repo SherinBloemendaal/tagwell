@@ -44,3 +44,7 @@ swift test
 - `Sources/ID3Kit`: reading and writing ID3v2.3, ID3v2.4 and ID3v1 tags. No AppKit, so it can be used on its own.
 - `Sources/Tagwell`: the SwiftUI app.
 - `Tests/ID3KitTests`: tests for the tag code.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
