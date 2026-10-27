@@ -77,14 +77,69 @@ struct LibraryTests {
         #expect(!first.isDirty)
     }
 
-    @Test func `saving remembers the artist across launches`() throws {
+    @Test func `saving remembers the artist across launches`() async throws {
         let (library, defaults) = makeLibrary()
         library.add([try makeFiles([""])])
         library.files[0].fields.artist = "Armin van Buuren"
 
-        #expect(library.saveAll())
+        #expect(await library.save(library.files))
         #expect(try ID3.readFields(from: library.files[0].url).artist == "Armin van Buuren")
         #expect(ArtistMemory(defaults: defaults).names == ["Armin van Buuren"])
+    }
+
+    @Test func `saving several files reports progress and clears it when done`() async throws {
+        let (library, _) = makeLibrary()
+        library.add([try makeFiles(["", "", ""])])
+        library.files.forEach { $0.fields.album = "Ultra Europe 2024" }
+
+        let save = Task { await library.save(library.files) }
+        // The first file is written off the main thread, so the progress is visible meanwhile.
+        while library.saveProgress == nil {
+            await Task.yield()
+        }
+        #expect(library.saveProgress?.total == 3)
+        #expect(library.isSaving)
+
+        #expect(await save.value)
+        #expect(library.saveProgress == nil)
+        #expect(!library.hasUnsavedChanges)
+    }
+
+    @Test func `stop finishes the file being written and leaves the rest unsaved`() async throws {
+        let (library, _) = makeLibrary()
+        library.add([try makeFiles(["", "", "", "", ""])])
+        library.files.forEach { $0.fields.album = "Parookaville 2024" }
+
+        let save = Task { await library.save(library.files) }
+        while library.saveProgress == nil {
+            await Task.yield()
+        }
+        library.stopSaving()
+
+        #expect(await save.value == false)
+        #expect(library.saveProgress == nil)
+        let saved = library.files.filter { !$0.isDirty }
+        #expect(saved.count >= 1)
+        #expect(saved.count < 5)
+        // Every file is either fully saved or untouched on disk.
+        for file in library.files {
+            let onDisk = try ID3.readFields(from: file.url).album
+            #expect(onDisk == (file.isDirty ? "" : "Parookaville 2024"))
+        }
+        #expect(library.errorMessage?.contains("Saving was stopped") == true)
+    }
+
+    @Test func `a second save while one runs is refused`() async throws {
+        let (library, _) = makeLibrary()
+        library.add([try makeFiles(["", ""])])
+        library.files.forEach { $0.fields.genre = "Hardstyle" }
+
+        let first = Task { await library.save(library.files) }
+        while library.saveProgress == nil {
+            await Task.yield()
+        }
+        #expect(await library.save(library.files) == false)
+        #expect(await first.value)
     }
 
     @Test func `artist suggestions combine remembered and open artists`() throws {

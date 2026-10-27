@@ -69,17 +69,25 @@ final class EditableFile: Identifiable {
         self.fields = fields
     }
 
-    /// Writes the tags, then renames the file. When the rename fails the tags are already saved
-    /// and the rename stays pending, so the user can fix the name and save again.
-    func save() throws {
+    /// Writes the tags, then renames the file. The disk work runs off the main thread, because a long
+    /// DJ set is read and written in full. When the rename fails the tags are already saved and the
+    /// rename stays pending, so the user can fix the name and save again.
+    func save() async throws {
         if fields != saved {
-            try ID3.write(fields, to: url)
-            // Show what is really in the file now, not what we meant to write.
-            saved = try ID3.readFields(from: url)
-            fields = saved
+            let written = fields
+            let reread = try await Self.writeTags(written, to: url)
+            // Show what is really in the file now, not what we meant to write. Edits made while
+            // the file was being written are kept, so they stay unsaved instead of being lost.
+            saved = reread
+            if fields == written {
+                fields = reread
+            }
         }
         if hasPendingRename {
-            try applyRename()
+            guard let plannedName else {
+                throw rename == .fromTags ? RenameError.needsTitle : RenameError.emptyName
+            }
+            url = try await Self.move(url, toName: plannedName)
         }
         rename = .keep
     }
@@ -89,17 +97,21 @@ final class EditableFile: Identifiable {
         rename = .keep
     }
 
-    private func applyRename() throws {
-        guard let plannedName else {
-            throw rename == .fromTags ? RenameError.needsTitle : RenameError.emptyName
-        }
-        let target = url.deletingLastPathComponent().appending(path: plannedName)
+    @concurrent
+    private nonisolated static func writeTags(_ fields: TagFields, to url: URL) async throws -> TagFields {
+        try ID3.write(fields, to: url)
+        return try ID3.readFields(from: url)
+    }
+
+    @concurrent
+    private nonisolated static func move(_ url: URL, toName name: String) async throws -> URL {
+        let target = url.deletingLastPathComponent().appending(path: name)
         // A change in letter case only points at the same file on a case-insensitive disk.
-        if FileManager.default.fileExists(atPath: target.path), !Self.isSameFile(url, target) {
-            throw RenameError.alreadyExists(plannedName)
+        if FileManager.default.fileExists(atPath: target.path), !isSameFile(url, target) {
+            throw RenameError.alreadyExists(name)
         }
         try FileManager.default.moveItem(at: url, to: target)
-        url = target
+        return target
     }
 
     /// Replaces characters macOS does not allow in a file name, and trims what Finder would hide or reject.
@@ -117,7 +129,7 @@ final class EditableFile: Identifiable {
         return name.isEmpty ? nil : name
     }
 
-    private static func isSameFile(_ first: URL, _ second: URL) -> Bool {
+    private nonisolated static func isSameFile(_ first: URL, _ second: URL) -> Bool {
         let key = URLResourceKey.fileResourceIdentifierKey
         guard let a = try? first.resourceValues(forKeys: [key]).fileResourceIdentifier,
               let b = try? second.resourceValues(forKeys: [key]).fileResourceIdentifier else { return false }
@@ -136,6 +148,17 @@ enum ArtistFilter: Hashable {
     case artist(String)
 }
 
+/// How far a save of several files has come.
+struct SaveProgress: Equatable {
+    let total: Int
+    var completed = 0
+    var currentName: String
+    /// Stop was clicked: the file being written is finished, the rest is left unsaved.
+    var isStopping = false
+
+    var fraction: Double { total == 0 ? 1 : Double(completed) / Double(total) }
+}
+
 @Observable
 final class Library {
     private(set) var files: [EditableFile] = []
@@ -144,7 +167,11 @@ final class Library {
     var searchText = ""
     var isImporting = false
     var errorMessage: String?
+    /// Set while files are being saved; one save runs at a time.
+    private(set) var saveProgress: SaveProgress?
     let artistMemory: ArtistMemory
+
+    var isSaving: Bool { saveProgress != nil }
 
     init(artistMemory: ArtistMemory = ArtistMemory()) {
         self.artistMemory = artistMemory
@@ -316,31 +343,59 @@ final class Library {
         selectedFiles.forEach { $0.revert() }
     }
 
-    @discardableResult
-    func saveSelected() -> Bool {
-        save(selectedFiles)
+    func saveSelected() {
+        let files = selectedFiles
+        Task { await save(files) }
     }
 
-    @discardableResult
-    func saveAll() -> Bool {
-        save(files)
+    func saveAll() {
+        let files = files
+        Task { await save(files) }
     }
 
-    /// Saves the changed files among `files` and remembers their artists.
-    /// Returns false when at least one could not be saved.
+    /// Finishes the file being written, then stops; the files after it stay unsaved.
+    func stopSaving() {
+        saveProgress?.isStopping = true
+    }
+
+    /// Saves the changed files among `files`, one at a time, and remembers their artists.
+    /// Returns true only when every changed file was saved.
     @discardableResult
-    func save(_ files: [EditableFile]) -> Bool {
+    func save(_ files: [EditableFile]) async -> Bool {
+        let changed = files.filter(\.isDirty)
+        guard !changed.isEmpty else { return true }
+        // The Save buttons are disabled while saving; this also covers ⌘S pressed twice quickly.
+        guard saveProgress == nil else { return false }
+
+        saveProgress = SaveProgress(total: changed.count, currentName: changed[0].name)
+        defer { saveProgress = nil }
+
         var failures: [String] = []
-        for file in files where file.isDirty {
+        var skipped = 0
+        for file in changed {
+            if saveProgress?.isStopping == true {
+                skipped += 1
+                continue
+            }
+            saveProgress?.currentName = file.name
             do {
-                try file.save()
+                try await file.save()
                 artistMemory.remember(file.saved.artist)
             } catch {
                 failures.append("\(file.name): \(error.localizedDescription)")
             }
+            saveProgress?.completed += 1
         }
-        guard failures.isEmpty else {
-            errorMessage = "Some files were not saved:\n" + failures.joined(separator: "\n")
+
+        var messages: [String] = []
+        if !failures.isEmpty {
+            messages.append("Some files were not saved:\n" + failures.joined(separator: "\n"))
+        }
+        if skipped > 0 {
+            messages.append("Saving was stopped. \(skipped) \(skipped == 1 ? "file was" : "files were") not saved and still \(skipped == 1 ? "has" : "have") unsaved changes.")
+        }
+        guard messages.isEmpty else {
+            errorMessage = messages.joined(separator: "\n\n")
             return false
         }
         return true

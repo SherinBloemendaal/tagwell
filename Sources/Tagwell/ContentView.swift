@@ -15,21 +15,29 @@ struct ContentView: View {
         } detail: {
             detail
         }
-        .navigationSubtitle(library.unsavedCount == 0 ? "" : "\(library.unsavedCount) unsaved")
+        .navigationSubtitle(subtitle)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button("Revert", systemImage: "arrow.uturn.backward") { library.revertSelected() }
-                    .disabled(!library.selectionHasUnsavedChanges)
+                    .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
                     .help("Undo the unsaved changes in the selected files")
                 Button("Save", systemImage: "square.and.arrow.down") { library.saveSelected() }
-                    .disabled(!library.selectionHasUnsavedChanges)
+                    .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
                     .help("Write the changes in the selected files to disk (⌘S)")
                 Button("Save All", systemImage: "square.and.arrow.down.on.square") { library.saveAll() }
-                    .disabled(!library.hasUnsavedChanges)
+                    .disabled(library.isSaving || !library.hasUnsavedChanges)
                     .help("Write the changes in every edited file to disk (⌥⌘S)")
             }
         }
         .labelStyle(.titleAndIcon)
+        // Saving one file is quick and shows in the subtitle; several files get a progress window.
+        .sheet(isPresented: Binding(
+            get: { (library.saveProgress?.total ?? 0) > 1 },
+            set: { _ in }
+        )) {
+            SaveProgressView(library: library)
+                .interactiveDismissDisabled()
+        }
         .fileImporter(
             isPresented: $library.isImporting,
             allowedContentTypes: [.mp3, .folder],
@@ -55,6 +63,13 @@ struct ContentView: View {
         } message: {
             Text(library.errorMessage ?? "")
         }
+    }
+
+    private var subtitle: String {
+        if let progress = library.saveProgress {
+            return progress.total == 1 ? "Saving \(progress.currentName)…" : "Saving \(progress.completed + 1) of \(progress.total)…"
+        }
+        return library.unsavedCount == 0 ? "" : "\(library.unsavedCount) unsaved"
     }
 
     @ViewBuilder

@@ -17,7 +17,7 @@ private func makeFile(named name: String, in folder: URL? = nil) throws -> Edita
 }
 
 struct RenameTests {
-    @Test func `renames after artist and title, together with the tags`() throws {
+    @Test func `renames after artist and title, together with the tags`() async throws {
         let file = try makeFile(named: "track01.mp3")
         file.fields.artist = "Hardwell"
         file.fields.title = "Live at Tomorrowland 2024"
@@ -25,7 +25,7 @@ struct RenameTests {
 
         #expect(file.plannedName == "Hardwell - Live at Tomorrowland 2024.mp3")
         #expect(file.isDirty)
-        try file.save()
+        try await file.save()
 
         #expect(file.name == "Hardwell - Live at Tomorrowland 2024.mp3")
         #expect(FileManager.default.fileExists(atPath: file.url.path))
@@ -34,12 +34,12 @@ struct RenameTests {
         #expect(!file.isDirty)
     }
 
-    @Test func `a custom name replaces characters macOS does not allow`() throws {
+    @Test func `a custom name replaces characters macOS does not allow`() async throws {
         let file = try makeFile(named: "a.mp3")
         file.rename = .custom("  .AC/DC: Live  ")
 
         #expect(file.plannedName == "AC-DC- Live.mp3")
-        try file.save()
+        try await file.save()
         #expect(file.name == "AC-DC- Live.mp3")
     }
 
@@ -49,33 +49,33 @@ struct RenameTests {
         #expect(file.plannedName == "quiet.MP3")
     }
 
-    @Test func `turning rename on without a change in name leaves the file clean`() throws {
+    @Test func `turning rename on without a change in name leaves the file clean`() async throws {
         let file = try makeFile(named: "Maddix - Ultra.mp3")
         file.fields.artist = "Maddix"
         file.fields.title = "Ultra"
-        try file.save()
+        try await file.save()
 
         file.rename = .fromTags
         #expect(!file.hasPendingRename)
     }
 
-    @Test func `refuses to overwrite another file`() throws {
+    @Test func `refuses to overwrite another file`() async throws {
         let first = try makeFile(named: "one.mp3")
         _ = try makeFile(named: "two.mp3", in: first.url.deletingLastPathComponent())
         first.rename = .custom("two")
 
-        #expect(throws: RenameError.alreadyExists("two.mp3")) { try first.save() }
+        await #expect(throws: RenameError.alreadyExists("two.mp3")) { try await first.save() }
         #expect(first.name == "one.mp3")
         #expect(first.hasPendingRename)
     }
 
-    @Test func `naming after tags needs a title, and the tags are still saved`() throws {
+    @Test func `naming after tags needs a title, and the tags are still saved`() async throws {
         let file = try makeFile(named: "x.mp3")
         file.fields.artist = "Armin van Buuren"
         file.rename = .fromTags
 
         #expect(file.plannedName == nil)
-        #expect(throws: RenameError.needsTitle) { try file.save() }
+        await #expect(throws: RenameError.needsTitle) { try await file.save() }
         #expect(try ID3.readFields(from: file.url).artist == "Armin van Buuren")
         #expect(file.name == "x.mp3")
     }

@@ -29,19 +29,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if library.isSaving {
+            let alert = NSAlert()
+            alert.messageText = "Tagwell is still saving"
+            alert.informativeText = "Quit again when saving has finished, or stop the save first."
+            alert.runModal()
+            return .terminateCancel
+        }
         guard library.hasUnsavedChanges else { return .terminateNow }
 
         let alert = NSAlert()
         alert.messageText = "Save your changes before quitting?"
-        alert.informativeText = "Some files have changes that are not saved yet."
+        alert.informativeText = "\(library.unsavedCount) \(library.unsavedCount == 1 ? "file has" : "files have") changes that are not saved yet."
         alert.addButton(withTitle: "Save All")
         alert.addButton(withTitle: "Don't Save")
         alert.addButton(withTitle: "Cancel")
 
         switch alert.runModal() {
-        case .alertFirstButtonReturn: return library.saveAll() ? .terminateNow : .terminateCancel
-        case .alertSecondButtonReturn: return .terminateNow
-        default: return .terminateCancel
+        case .alertFirstButtonReturn:
+            // Save with the progress window showing, then quit. When a file fails or the save
+            // is stopped, Tagwell stays open and shows what was not saved.
+            Task {
+                if await library.save(library.files) {
+                    NSApp.terminate(nil)
+                }
+            }
+            return .terminateCancel
+        case .alertSecondButtonReturn:
+            return .terminateNow
+        default:
+            return .terminateCancel
         }
     }
 }
@@ -57,14 +74,14 @@ struct LibraryCommands: Commands {
         CommandGroup(replacing: .saveItem) {
             Button("Save") { library.saveSelected() }
                 .keyboardShortcut("s")
-                .disabled(!library.selectionHasUnsavedChanges)
+                .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
 
             Button("Save All") { library.saveAll() }
                 .keyboardShortcut("s", modifiers: [.command, .option])
-                .disabled(!library.hasUnsavedChanges)
+                .disabled(library.isSaving || !library.hasUnsavedChanges)
 
             Button("Revert") { library.revertSelected() }
-                .disabled(!library.selectionHasUnsavedChanges)
+                .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
         }
     }
 }
