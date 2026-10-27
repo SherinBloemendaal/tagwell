@@ -35,13 +35,13 @@ Repo: [github.com/SherinBloemendaal/tagwell](https://github.com/SherinBloemendaa
 ## 📦 Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SherinBloemendaal/tagwell/main/install.sh | bash
+curl -fsSL https://sherin.dev/tagwell/install.sh | bash
 ```
 
 Pin a release with `bash -s`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SherinBloemendaal/tagwell/main/install.sh | bash -s v1.0.0
+curl -fsSL https://sherin.dev/tagwell/install.sh | bash -s v1.0.0
 ```
 
 The script downloads `Tagwell.zip` from the GitHub release, checks it against `SHA256SUMS`, and installs `Tagwell.app` into `/Applications` (or `~/Applications` when `/Applications` is not writable; override with `TAGWELL_INSTALL`). Run it again to upgrade in place. To uninstall, move `Tagwell.app` to the Trash.

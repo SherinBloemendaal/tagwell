@@ -2,8 +2,8 @@
 # Install Tagwell from GitHub releases.
 # https://github.com/SherinBloemendaal/tagwell
 #
-#   curl -fsSL https://raw.githubusercontent.com/SherinBloemendaal/tagwell/main/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/SherinBloemendaal/tagwell/main/install.sh | bash -s v1.0.0
+#   curl -fsSL https://sherin.dev/tagwell/install.sh | bash
+#   curl -fsSL https://sherin.dev/tagwell/install.sh | bash -s v1.0.0
 #
 # TAGWELL_VERSION pins a release tag, TAGWELL_INSTALL picks the folder (default /Applications,
 # or ~/Applications when /Applications is not writable).
