@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="Tagwell: edit MP3 tags, touch nothing else">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14111F"/><stop offset="1" stop-color="#1E1830"/></linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.2" r="0.6"><stop offset="0" stop-color="#A78BFA" stop-opacity="0.18"/><stop offset="1" stop-color="#A78BFA" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1200" height="320" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="24" fill="url(#glow)"/>
+  <g opacity="0.55">
+    <rect x="760" y="190" width="10" height="40" rx="5" fill="#F472B6" opacity="0.25"/><rect x="782" y="160" width="10" height="70" rx="5" fill="#A78BFA" opacity="0.37"/><rect x="804" y="120" width="10" height="110" rx="5" fill="#A78BFA" opacity="0.49"/><rect x="826" y="145" width="10" height="85" rx="5" fill="#F472B6" opacity="0.61"/><rect x="848" y="90" width="10" height="140" rx="5" fill="#A78BFA" opacity="0.25"/><rect x="870" y="170" width="10" height="60" rx="5" fill="#A78BFA" opacity="0.37"/><rect x="892" y="110" width="10" height="120" rx="5" fill="#F472B6" opacity="0.49"/><rect x="914" y="135" width="10" height="95" rx="5" fill="#A78BFA" opacity="0.61"/><rect x="936" y="80" width="10" height="150" rx="5" fill="#A78BFA" opacity="0.25"/><rect x="958" y="155" width="10" height="75" rx="5" fill="#F472B6" opacity="0.37"/><rect x="980" y="100" width="10" height="130" rx="5" fill="#A78BFA" opacity="0.49"/><rect x="1002" y="175" width="10" height="55" rx="5" fill="#A78BFA" opacity="0.61"/><rect x="1024" y="130" width="10" height="100" rx="5" fill="#F472B6" opacity="0.25"/><rect x="1046" y="150" width="10" height="80" rx="5" fill="#A78BFA" opacity="0.37"/><rect x="1068" y="185" width="10" height="45" rx="5" fill="#A78BFA" opacity="0.49"/><rect x="1090" y="165" width="10" height="65" rx="5" fill="#F472B6" opacity="0.61"/><rect x="1112" y="200" width="10" height="30" rx="5" fill="#A78BFA" opacity="0.25"/><rect x="1134" y="180" width="10" height="50" rx="5" fill="#A78BFA" opacity="0.37"/>
+  </g>
+  <g transform="translate(92,92) scale(1.55)">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A78BFA"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs>
+  <path d="M8 0 H64 a8 8 0 0 1 8 8 V56 a8 8 0 0 1 -2.6 5.9 L40 88 a8 8 0 0 1 -10.8 0 L2.6 61.9 A8 8 0 0 1 0 56 V8 a8 8 0 0 1 8 -8 Z" fill="url(#g)" transform="rotate(-45 36 44)"/>
+  <circle cx="36" cy="10" r="0" fill="none"/>
+  <g transform="rotate(-45 36 44)"><circle cx="36" cy="14" r="6" fill="#14111F"/></g>
+  <path d="M42 30 V58 a8 8 0 1 1 -5 -7.4 V36 L56 31 V52 a8 8 0 1 1 -5 -7.4 V24 Z" fill="#FFFFFF" transform="translate(-6,4)"/>
+</g>
+  <text x="250" y="160" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="84" font-weight="800" letter-spacing="-2" fill="#F4F1FF">Tagwell</text>
+  <text x="254" y="208" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="28" font-weight="500" fill="#B4AECB">Edit MP3 tags. Touch nothing else.</text>
+  <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#B4AECB">
+    <rect x="254" y="236" width="104" height="30" rx="15" fill="#231C38" stroke="#3A2F5C"/><text x="306" y="256" text-anchor="middle">ID3v2.3</text>
+    <rect x="368" y="236" width="104" height="30" rx="15" fill="#231C38" stroke="#3A2F5C"/><text x="420" y="256" text-anchor="middle">ID3v2.4</text>
+    <rect x="482" y="236" width="90" height="30" rx="15" fill="#231C38" stroke="#3A2F5C"/><text x="527" y="256" text-anchor="middle">ID3v1</text>
+    <rect x="582" y="236" width="128" height="30" rx="15" fill="#231C38" stroke="#3A2F5C"/><text x="646" y="256" text-anchor="middle">native macOS</text>
+  </g>
+</svg>
