@@ -28,9 +28,21 @@ fail() {
 macos_major="$(sw_vers -productVersion | cut -d. -f1)"
 [ "$macos_major" -ge 15 ] || fail "Tagwell needs macOS 15 or later (this Mac runs $(sw_vers -productVersion))."
 
-if pgrep -xq Tagwell; then
-    fail "Tagwell is running. Quit it first, then run this script again."
+destination="${TAGWELL_INSTALL:-/Applications}"
+if [ -z "${TAGWELL_INSTALL:-}" ] && [ ! -w "$destination" ]; then
+    destination="$HOME/Applications"
 fi
+mkdir -p "$destination"
+destination="$(cd "$destination" && pwd -P)"
+
+# Only the copy that is about to be replaced has to be closed; Tagwell running from elsewhere is fine.
+for pid in $(pgrep -x Tagwell || true); do
+    executable="$(ps -o comm= -p "$pid" 2>/dev/null || true)"
+    running_app="$(cd "$(dirname "$executable")/../.." 2>/dev/null && pwd -P || true)"
+    if [ "$running_app" = "$destination/Tagwell.app" ]; then
+        fail "Tagwell is running from $destination. Quit it first, then run this script again."
+    fi
+done
 
 if [ "$version" = "latest" ]; then
     base="https://github.com/$repo/releases/latest/download"
@@ -52,12 +64,6 @@ actual="$(shasum -a 256 "$tmp/Tagwell.zip" | awk '{ print $1 }')"
 
 ditto -x -k "$tmp/Tagwell.zip" "$tmp/unpacked"
 [ -d "$tmp/unpacked/Tagwell.app" ] || fail "the download does not contain Tagwell.app"
-
-destination="${TAGWELL_INSTALL:-/Applications}"
-if [ -z "${TAGWELL_INSTALL:-}" ] && [ ! -w "$destination" ]; then
-    destination="$HOME/Applications"
-fi
-mkdir -p "$destination"
 
 rm -rf "$destination/Tagwell.app"
 ditto "$tmp/unpacked/Tagwell.app" "$destination/Tagwell.app"
