@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="400" viewBox="0 0 660 400">
+  <!-- Finder places Tagwell.app at (165, 180) and Applications at (495, 180); see scripts/dmg-settings.py. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBF9FF"/>
+      <stop offset="1" stop-color="#F1EAFE"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0" stop-color="#7C3AED" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#DB2777"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="660" height="400" fill="url(#bg)"/>
+  <rect width="660" height="400" fill="url(#glow)"/>
+
+  <g fill="#7C3AED" opacity="0.07">
+    <rect x="40" y="330" width="10" height="40" rx="5"/>
+    <rect x="60" y="310" width="10" height="80" rx="5"/>
+    <rect x="80" y="335" width="10" height="30" rx="5"/>
+    <rect x="100" y="320" width="10" height="60" rx="5"/>
+    <rect x="550" y="325" width="10" height="50" rx="5"/>
+    <rect x="570" y="305" width="10" height="90" rx="5"/>
+    <rect x="590" y="330" width="10" height="40" rx="5"/>
+    <rect x="610" y="318" width="10" height="64" rx="5"/>
+  </g>
+
+  <path d="M262 168 C 300 120, 360 120, 398 168" fill="none" stroke="url(#arrow)" stroke-width="5"
+        stroke-linecap="round" stroke-dasharray="2 13"/>
+  <path d="M398 149 L400 171 L379 165" fill="none" stroke="#DB2777" stroke-width="5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="330" y="326" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="15" font-weight="500" fill="#5B5670">Drag Tagwell to Applications to install it</text>
+</svg>

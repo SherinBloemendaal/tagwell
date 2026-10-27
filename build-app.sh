@@ -20,6 +20,7 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$binary" "$app/Contents/MacOS/Tagwell"
 cp Resources/Info.plist "$app/Contents/Info.plist"
+cp Resources/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
 if [ -n "${VERSION:-}" ]; then
     plutil -replace CFBundleShortVersionString -string "$VERSION" "$app/Contents/Info.plist"

@@ -8,6 +8,8 @@
     <string>Tagwell</string>
     <key>CFBundleExecutable</key>
     <string>Tagwell</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>io.github.sherinbloemendaal.tagwell</string>
     <key>CFBundleInfoDictionaryVersion</key>
