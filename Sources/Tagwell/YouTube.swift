@@ -41,6 +41,11 @@ nonisolated enum YouTube {
             .first
     }
 
+    /// "Title [dQw4w9WgXcQ]" becomes "Title", for searching by file name.
+    static func removingVideoID(from name: String) -> String {
+        name.replacing(#/\s*\[[A-Za-z0-9_-]{11}\]/#, with: "").trimmingCharacters(in: .whitespaces)
+    }
+
     /// Thumbnail sizes from largest to smallest. Not every video has the larger ones.
     static func thumbnailURLs(for videoID: String) -> [URL] {
         ["maxresdefault", "sddefault", "hqdefault"].compactMap {

@@ -223,7 +223,8 @@ struct TagEditorView: View {
                 HStack(alignment: .top, spacing: 20) {
                     ArtworkWell(
                         artwork: $file.fields.artwork,
-                        suggestedVideoID: YouTube.videoID(in: file.name, comment: file.fields.comment)
+                        suggestedVideoID: YouTube.videoID(in: file.name, comment: file.fields.comment),
+                        suggestedSearch: file.tagBasedName ?? YouTube.removingVideoID(from: file.baseName)
                     )
                     VStack(spacing: 10) {
                         TextField("Title", text: $file.fields.title)
@@ -326,6 +327,8 @@ struct ArtworkWell: View {
     var isMixed = false
     /// Video ID found in the file name or comment, to fill in the YouTube link.
     var suggestedVideoID: String?
+    /// What to search YouTube for, usually "Artist - Title".
+    var suggestedSearch = ""
     @State private var isImporting = false
     @State private var isPickingYouTube = false
     @State private var errorMessage: String?
@@ -369,7 +372,11 @@ struct ArtworkWell: View {
             .controlSize(.small)
         }
         .sheet(isPresented: $isPickingYouTube) {
-            YouTubeThumbnailSheet(artwork: $artwork, link: suggestedVideoID.map(YouTube.watchURL) ?? "")
+            YouTubeThumbnailSheet(
+                artwork: $artwork,
+                suggestedLink: suggestedVideoID.map(YouTube.watchURL) ?? "",
+                suggestedSearch: suggestedSearch
+            )
         }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.image]) { result in
             switch result {
