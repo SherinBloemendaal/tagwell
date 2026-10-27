@@ -30,7 +30,7 @@ Repo: [github.com/SherinBloemendaal/tagwell](https://github.com/SherinBloemendaa
 - **Artist folders.** Every artist gets a folder in the sidebar. Drag files onto a folder to set their artist; drop them on *No Artist* to clear it.
 - **Remembers your artists.** Saved artists come back as suggestions in the Artist field, so *Armin van Buuren* is spelled the same way on every file.
 - **Search** by title, artist, album or file name.
-- **YouTube thumbnails as cover art.** Paste a link, or let Tagwell find the video in the file name (`Title [ID].mp3`, as yt-dlp names downloads) or in a link in the comment. Thumbnails are cropped to a square by default; in bulk, every file gets its own video's thumbnail.
+- **YouTube thumbnails as cover art.** Tagwell searches YouTube for the track's artist and title and shows the thumbnails to pick from, ten at a time with *Load More*. Or paste a link, or let Tagwell find the video in the file name (`Title [ID].mp3`, as yt-dlp names downloads) or in a link in the comment. Thumbnails are cropped to a square by default; in bulk, every file gets its own video's thumbnail.
 - **Rename files when saving**, optionally: to `Artist - Title`, or to a name you type. Characters macOS does not allow are replaced, and an existing file is never overwritten.
 - **Safe saves.** The new file is written next to the old one and swapped in. Damaged tags and the old ID3v2.2 format are refused, not overwritten.
 
@@ -44,6 +44,12 @@ Pin a release with `bash -s`:
 
 ```bash
 curl -fsSL https://sherin.dev/tagwell/install.sh | bash -s v1.0.0
+```
+
+Searching YouTube for cover art uses [yt-dlp](https://github.com/yt-dlp/yt-dlp), so no API key is needed. Install it once if you want that:
+
+```bash
+brew install yt-dlp
 ```
 
 The script downloads `Tagwell.zip` from the GitHub release, checks it against `SHA256SUMS`, and installs `Tagwell.app` into `/Applications` (or `~/Applications` when `/Applications` is not writable; override with `TAGWELL_INSTALL`). Run it again to upgrade in place. To uninstall, move `Tagwell.app` to the Trash.
