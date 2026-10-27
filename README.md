@@ -48,12 +48,16 @@ curl -fsSL https://sherin.dev/tagwell/install.sh | bash -s v1.0.0
 
 The script downloads `Tagwell.zip` from the GitHub release, checks it against `SHA256SUMS`, and installs `Tagwell.app` into `/Applications` (or `~/Applications` when `/Applications` is not writable; override with `TAGWELL_INSTALL`). Run it again to upgrade in place. To uninstall, move `Tagwell.app` to the Trash.
 
+### Download
+
+Download [`Tagwell.dmg`](https://github.com/SherinBloemendaal/tagwell/releases/latest/download/Tagwell.dmg), open it, and drag Tagwell onto the Applications folder. It runs on Apple Silicon and Intel Macs with macOS 15 or later.
+
 <details>
-<summary><b>Download by hand</b></summary>
+<summary><b>Other downloads and the first launch</b></summary>
 
 <br>
 
-Download [`Tagwell.zip`](https://github.com/SherinBloemendaal/tagwell/releases/latest/download/Tagwell.zip) from the [latest release](https://github.com/SherinBloemendaal/tagwell/releases/latest) and move `Tagwell.app` to Applications. It runs on Apple Silicon and Intel Macs with macOS 15 or later.
+Every [release](https://github.com/SherinBloemendaal/tagwell/releases/latest) also has `Tagwell.zip` (the app on its own) and `SHA256SUMS`, which covers both downloads.
 
 > [!NOTE]
 > Tagwell is not notarized by Apple, so macOS blocks it the first time when it was downloaded with a browser. Open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**. Or clear the download flag:
@@ -115,10 +119,11 @@ Requires macOS 15 or later and Xcode 26 (Swift 6.2 or later). There are no depen
 ```bash
 ./build-app.sh          # build/Tagwell.app for this Mac
 UNIVERSAL=1 ./build-app.sh   # Apple Silicon and Intel in one app
+scripts/make-dmg.sh     # build/Tagwell.dmg from build/Tagwell.app
 swift test              # run the tests
 ```
 
-Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.zip` with `SHA256SUMS`.
+Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.dmg` and `Tagwell.zip` with `SHA256SUMS`.
 
 <details>
 <summary><b>Project layout</b></summary>
@@ -132,6 +137,9 @@ Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release 
 | `Tests/ID3KitTests`    | Tests for the tag code: round trips, kept frames, encodings, validation.   |
 | `Tests/TagwellTests`   | Tests for the app: folders, search, artist memory, bulk tools, renaming, YouTube links. |
 | `install.sh`           | The install script.                                                        |
+| `art/`                 | The app icon and the DMG background, as SVG.                               |
+| `scripts/make-art.sh`  | Turns `art/` into `Resources/AppIcon.icns` and the DMG background.         |
+| `scripts/make-dmg.sh`  | Builds `Tagwell.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild). |
 
 </details>
 
