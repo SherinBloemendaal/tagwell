@@ -16,7 +16,7 @@
 **Tagwell** is a small, native macOS app for editing MP3 tags: one file at a time, or hundreds at once.<br>
 Repo: [github.com/SherinBloemendaal/tagwell](https://github.com/SherinBloemendaal/tagwell)
 
-[Install](#-install) · [Highlights](#-highlights) · [How it works](#-how-it-works) · [Organising a big library](#-organising-a-big-library) · [Shortcuts](#%EF%B8%8F-shortcuts) · [Building](#-building)
+[Install](#-install) · [Highlights](#-highlights) · [How it works](#-how-it-works) · [Organising a big library](#-organising-a-big-library) · [Shortcuts](#%EF%B8%8F-shortcuts) · [Roadmap](#%EF%B8%8F-roadmap) · [Building](#-building)
 
 </div>
 
@@ -30,6 +30,8 @@ Repo: [github.com/SherinBloemendaal/tagwell](https://github.com/SherinBloemendaa
 - **Artist folders.** Every artist gets a folder in the sidebar. Drag files onto a folder to set their artist; drop them on *No Artist* to clear it.
 - **Remembers your artists.** Saved artists come back as suggestions in the Artist field, so *Armin van Buuren* is spelled the same way on every file.
 - **Search** by title, artist, album or file name.
+- **YouTube thumbnails as cover art.** Paste a link, or let Tagwell find the video in the file name (`Title [ID].mp3`, as yt-dlp names downloads) or in a link in the comment. Thumbnails are cropped to a square by default; in bulk, every file gets its own video's thumbnail.
+- **Rename files when saving**, optionally: to `Artist - Title`, or to a name you type. Characters macOS does not allow are replaced, and an existing file is never overwritten.
 - **Safe saves.** The new file is written next to the old one and swapped in. Damaged tags and the old ID3v2.2 format are refused, not overwritten.
 
 ## 📦 Install
@@ -82,8 +84,9 @@ Tagwell works well for a large collection of live sets, mixes or recordings that
 1. **Open the whole folder** with ⌘O or by dropping it on the window. All MP3 files inside, including subfolders, are added and selected.
 2. **Sort by artist.** Select the sets of one artist and drag them onto their folder in the sidebar. Use **Add Artist** to create a folder first. *No Artist* shows what is left.
 3. **Fill in the rest together.** Select the sets of one event and type the album once, for example `Tomorrowland 2024`, and drop the event's artwork on the cover box.
-4. **Number and name.** *Number Tracks* gives them `1/12`, `2/12`… in list order; *Use File Names* copies the file names into the titles.
-5. **Save All** with ⌥⌘S.
+4. **Cover art from YouTube.** Downloaded the sets from YouTube? *YouTube Thumbnails* gives every selected file its own video's thumbnail, using the video ID in the file name or comment.
+5. **Number and name.** *Number Tracks* gives them `1/12`, `2/12`… in list order; *Use File Names* copies the file names into the titles. Turn on *Rename the files to Artist - Title* to tidy the file names as well.
+6. **Save All** with ⌥⌘S.
 
 > [!TIP]
 > Pick one pattern and stick to it, for example *Artist* = the DJ, *Album* = `Event Year`, *Title* = `Live at Event Year (Stage)`. Streaming apps group by album and artist, so a steady pattern keeps every set of one event together.
@@ -98,6 +101,12 @@ Tagwell works well for a large collection of live sets, mixes or recordings that
 | Select all files in the list   | ⌘A       |
 
 Every toolbar button has a tooltip; hover over it to see what it does. An orange dot in the list marks files with unsaved changes, and Tagwell asks before quitting if there are any.
+
+## 🗺️ Roadmap
+
+Ideas for later. Nothing here is promised.
+
+- **Download from YouTube with [yt-dlp](https://github.com/yt-dlp/yt-dlp).** Paste a link, and Tagwell downloads the audio as MP3 through yt-dlp, fills in the title, artist and cover art from the video, and adds it to the list. yt-dlp would be an optional install, used only when present.
 
 ## 🔨 Building
 
@@ -121,7 +130,7 @@ Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release 
 | `Sources/ID3Kit`       | Reading and writing ID3v2.3, ID3v2.4 and ID3v1 tags. No AppKit.            |
 | `Sources/Tagwell`      | The SwiftUI app: artist folders, file list, single and bulk editors.       |
 | `Tests/ID3KitTests`    | Tests for the tag code: round trips, kept frames, encodings, validation.   |
-| `Tests/TagwellTests`   | Tests for the library: folders, search, artist memory, bulk tools.         |
+| `Tests/TagwellTests`   | Tests for the app: folders, search, artist memory, bulk tools, renaming, YouTube links. |
 | `install.sh`           | The install script.                                                        |
 
 </details>
