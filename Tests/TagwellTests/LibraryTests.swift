@@ -62,6 +62,28 @@ struct LibraryTests {
         #expect(library.visibleFiles.count == 2)
     }
 
+    @Test func `search needs every word, in any field and any order, ignoring case and accents`() throws {
+        let (library, _) = makeLibrary()
+        library.add([try makeFiles(["Hardwell", "Hardwell", "Armin van Buuren"])])
+        library.files[0].fields.album = "Tomorrowland 2024"
+        library.files[1].fields.album = "Ultra Miami 2024"
+        library.files[2].fields.album = "Tomorrowland 2023"
+        library.files[2].fields.genre = "Trancé"
+
+        library.searchText = "Tomorrowland Hardwell"
+        #expect(library.visibleFiles.map(\.name) == ["Set 01.mp3"])
+        library.searchText = "  hardwell   TOMORROWLAND "
+        #expect(library.visibleFiles.map(\.name) == ["Set 01.mp3"])
+        library.searchText = "2024 hardwell"
+        #expect(library.visibleFiles.map(\.name) == ["Set 01.mp3", "Set 02.mp3"])
+        library.searchText = "tomorrowland trance"
+        #expect(library.visibleFiles.map(\.name) == ["Set 03.mp3"])
+        library.searchText = "hardwell maddix"
+        #expect(library.visibleFiles.isEmpty)
+        library.searchText = "set 03 armin"
+        #expect(library.visibleFiles.map(\.name) == ["Set 03.mp3"])
+    }
+
     @Test func `dropping files on an artist folder sets their artist, and on No Artist clears it`() throws {
         let (library, _) = makeLibrary()
         library.add([try makeFiles(["", "", "Maddix"])])

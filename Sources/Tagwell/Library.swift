@@ -136,8 +136,16 @@ final class EditableFile: Identifiable {
         return a.isEqual(b)
     }
 
+    /// Every word of the search has to appear somewhere in the file name or the tags, in any order,
+    /// ignoring case and accents: "tomorrowland hardwell" finds Hardwell's Tomorrowland sets.
     func matches(_ search: String) -> Bool {
-        [name, fields.title, fields.artist, fields.album].contains { $0.localizedCaseInsensitiveContains(search) }
+        let haystack = [
+            name, fields.title, fields.artist, fields.album, fields.albumArtist,
+            fields.composer, fields.genre, fields.year, fields.comment,
+        ]
+        return search.split(whereSeparator: \.isWhitespace).allSatisfy { word in
+            haystack.contains { $0.localizedStandardContains(word) }
+        }
     }
 }
 
