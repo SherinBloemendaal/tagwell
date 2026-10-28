@@ -11,6 +11,9 @@ struct TagwellApp: App {
         }
         .defaultSize(width: 1100, height: 680)
         .commands {
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesButton(updater: appDelegate.updater.updater)
+            }
             LibraryCommands(library: appDelegate.library)
         }
     }
@@ -18,6 +21,7 @@ struct TagwellApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let library = Library()
+    let updater = AppUpdater()
 
     /// Files opened from Finder ("Open With", or dropped on the Dock icon).
     func application(_ application: NSApplication, open urls: [URL]) {

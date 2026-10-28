@@ -30,6 +30,14 @@
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>SUFeedURL</key>
+    <string>https://github.com/SherinBloemendaal/tagwell/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>y/w/gpZyH4Y7CD8qReiPfFsJh7Inc95OYGWznXxCEUQ=</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SURequireSignedFeed</key>
+    <true/>
     <key>UTExportedTypeDeclarations</key>
     <array>
         <dict>

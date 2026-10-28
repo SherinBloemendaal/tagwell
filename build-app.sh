@@ -17,8 +17,10 @@ binary="$(swift build -c release --product Tagwell ${arch_flags[@]+"${arch_flags
 
 app="build/Tagwell.app"
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Frameworks"
 cp "$binary" "$app/Contents/MacOS/Tagwell"
+# Sparkle, for in-app updates. ditto keeps the framework's symlinks and its own signature.
+ditto "$(dirname "$binary")/Sparkle.framework" "$app/Contents/Frameworks/Sparkle.framework"
 cp Resources/Info.plist "$app/Contents/Info.plist"
 cp Resources/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
@@ -28,4 +30,5 @@ if [ -n "${VERSION:-}" ]; then
 fi
 
 codesign --force --sign - "$app"
+codesign --verify --deep --strict "$app"
 echo "Built $app"

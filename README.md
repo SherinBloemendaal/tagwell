@@ -54,6 +54,10 @@ brew install yt-dlp
 
 The script downloads `Tagwell.zip` from the GitHub release, checks it against `SHA256SUMS`, and installs `Tagwell.app` into `/Applications` (or `~/Applications` when `/Applications` is not writable; override with `TAGWELL_INSTALL`). Run it again to upgrade in place. To uninstall, move `Tagwell.app` to the Trash.
 
+### Updates
+
+From 1.3.0 on, Tagwell looks for a new release once a day and offers to install it, with **Tagwell → Check for Updates…** to look right away. Updates come through [Sparkle](https://sparkle-project.org): each one is signed, and Tagwell installs only updates signed with the release key. Versions before 1.3.0 update with the install script or a new download, once.
+
 ### Download
 
 Download [`Tagwell.dmg`](https://github.com/SherinBloemendaal/tagwell/releases/latest/download/Tagwell.dmg), open it, and drag Tagwell onto the Applications folder. It runs on Apple Silicon and Intel Macs with macOS 15 or later.
@@ -120,7 +124,7 @@ Ideas for later. Nothing here is promised.
 
 ## 🔨 Building
 
-Requires macOS 15 or later and Xcode 26 (Swift 6.2 or later). There are no dependencies.
+Requires macOS 15 or later and Xcode 26 (Swift 6.2 or later). The one dependency is [Sparkle](https://github.com/sparkle-project/Sparkle), for in-app updates; SwiftPM fetches it and `build-app.sh` puts it in the app.
 
 ```bash
 ./build-app.sh          # build/Tagwell.app for this Mac
@@ -129,7 +133,7 @@ scripts/make-dmg.sh     # build/Tagwell.dmg from build/Tagwell.app
 swift test              # run the tests
 ```
 
-Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.dmg` and `Tagwell.zip` with `SHA256SUMS`.
+Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.dmg` and `Tagwell.zip` with `SHA256SUMS`, plus `appcast.xml`: the update feed the app reads, signed by `scripts/make-appcast.sh` with the `SPARKLE_PRIVATE_KEY` secret. The same key sits in the maintainer's Keychain (Sparkle account `sherin.dev`); without it no further update can be published.
 
 <details>
 <summary><b>Project layout</b></summary>
@@ -146,6 +150,7 @@ Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release 
 | `art/`                 | The app icon and the DMG background, as SVG.                               |
 | `scripts/make-art.sh`  | Turns `art/` into `Resources/AppIcon.icns` and the DMG background.         |
 | `scripts/make-dmg.sh`  | Builds `Tagwell.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild). |
+| `scripts/make-appcast.sh` | Signs `Tagwell.zip` and writes the signed Sparkle feed `appcast.xml`.   |
 
 </details>
 
