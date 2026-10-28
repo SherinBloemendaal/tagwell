@@ -38,6 +38,8 @@
     <true/>
     <key>SURequireSignedFeed</key>
     <true/>
+    <key>SUVerifyUpdateBeforeExtraction</key>
+    <true/>
     <key>UTExportedTypeDeclarations</key>
     <array>
         <dict>
