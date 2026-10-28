@@ -133,7 +133,7 @@ scripts/make-dmg.sh     # build/Tagwell.dmg from build/Tagwell.app
 swift test              # run the tests
 ```
 
-Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.dmg` and `Tagwell.zip` with `SHA256SUMS`, plus `appcast.xml`: the update feed the app reads, signed by `scripts/make-appcast.sh` with the `SPARKLE_PRIVATE_KEY` secret. The same key sits in the maintainer's Keychain (Sparkle account `sherin.dev`); without it no further update can be published.
+Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.dmg` and `Tagwell.zip` with `SHA256SUMS`, plus `appcast.xml`: the update feed the app reads, signed by `scripts/make-appcast.sh` with the `SPARKLE_PRIVATE_KEY` secret. The key itself lives only in 1Password ("Sparkle update signing key (Tagwell)"); the secret is a copy of it, and the script reads 1Password when run locally. Without that key no further update can be published.
 
 <details>
 <summary><b>Project layout</b></summary>

@@ -3,7 +3,7 @@
 # update and the feed with the private key, so Tagwell only installs updates made by this script.
 #
 #   VERSION=1.3.0          the version being released (required)
-#   SPARKLE_PRIVATE_KEY    the private EdDSA key; without it the key in your Keychain (account sherin.dev) is used
+#   SPARKLE_PRIVATE_KEY    the private EdDSA key; without it the key is read from 1Password (needs `op`)
 #
 # Needs dist/Tagwell.zip and a `swift build` that downloaded Sparkle's tools.
 set -euo pipefail
@@ -19,12 +19,14 @@ sign_update="$(find .build/artifacts -path '*/Sparkle/bin/sign_update' -type f |
 [ -x "$sign_update" ] || { echo "sign_update not found: run swift build first" >&2; exit 1; }
 [ -f "$zip" ] || { echo "$zip not found" >&2; exit 1; }
 
+# The key lives only in 1Password; CI gets a copy as the SPARKLE_PRIVATE_KEY secret.
+key_item="op://Employee/odlqw22wdffnqd55ieoep3lsem/password"
+if [ -z "${SPARKLE_PRIVATE_KEY:-}" ]; then
+    SPARKLE_PRIVATE_KEY="$(op read "$key_item")"
+fi
+
 sign() {
-    if [ -n "${SPARKLE_PRIVATE_KEY:-}" ]; then
-        printf '%s' "$SPARKLE_PRIVATE_KEY" | "$sign_update" --ed-key-file - "$@"
-    else
-        "$sign_update" --account sherin.dev "$@"
-    fi
+    printf '%s' "$SPARKLE_PRIVATE_KEY" | "$sign_update" --ed-key-file - "$@"
 }
 
 escape() {
