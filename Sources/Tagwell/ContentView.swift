@@ -17,11 +17,18 @@ struct ContentView: View {
         }
         .navigationSubtitle(subtitle)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            ToolbarItem(placement: .primaryAction) {
                 Button("Revert", systemImage: "arrow.uturn.backward") { library.revertSelected() }
                     .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
                     .help("Undo the unsaved changes in the selected files")
+            }
+            // On glass, Revert gets its own capsule apart from the two saves.
+            if #available(macOS 26, *) {
+                ToolbarSpacer(.fixed, placement: .primaryAction)
+            }
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button("Save", systemImage: "square.and.arrow.down") { library.saveSelected() }
+                    .glassButtonStyle(prominent: true, otherwise: .automatic)
                     .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
                     .help("Write the changes in the selected files to disk (⌘S)")
                 Button("Save All", systemImage: "square.and.arrow.down.on.square") { library.saveAll() }
@@ -134,7 +141,7 @@ struct ArtistSidebar: View {
                     newArtist = ""
                     isAddingArtist = true
                 }
-                .buttonStyle(.borderless)
+                .glassButtonStyle(otherwise: .borderless)
                 .help("Create an artist folder you can drop files on")
                 Spacer()
             }
@@ -351,7 +358,7 @@ struct ArtworkWell: View {
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(.quaternary)
                 if let artwork, let image = NSImage(data: artwork.data) {
                     Image(nsImage: image)
@@ -367,7 +374,7 @@ struct ArtworkWell: View {
                 }
             }
             .frame(width: 160, height: 160)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .dropDestination(for: URL.self) { urls, _ in
                 guard let url = urls.first else { return false }
                 load(url)
@@ -384,6 +391,7 @@ struct ArtworkWell: View {
                     .disabled(artwork == nil && !isMixed)
                     .help("Remove the cover art")
             }
+            .glassButtonStyle()
             .controlSize(.small)
         }
         .sheet(isPresented: $isPickingYouTube) {

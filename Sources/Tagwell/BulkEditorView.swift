@@ -36,10 +36,12 @@ struct BulkEditorView: View {
             Section("Tools") {
                 LabeledContent("Track numbers") {
                     Button("Number Tracks") { library.numberTracks(files) }
+                        .glassButtonStyle()
                         .help("Set the track numbers to 1/\(files.count), 2/\(files.count)… in list order")
                 }
                 LabeledContent("Titles") {
                     Button("Use File Names") { library.useFileNamesAsTitles(files) }
+                        .glassButtonStyle()
                         .help("Set each title to its file name, without .mp3")
                 }
                 LabeledContent("Cover art") {
@@ -58,6 +60,7 @@ struct BulkEditorView: View {
                             }
                         }
                         .disabled(isFetchingThumbnails)
+                        .glassButtonStyle()
                         .help("Give each file its own video's thumbnail, using the [video ID] in its file name or a YouTube link in its comment")
                     }
                 }

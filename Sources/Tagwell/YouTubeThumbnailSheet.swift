@@ -227,9 +227,9 @@ private struct ResultCell: View {
                 if let duration = video.formattedDuration {
                     Text(duration)
                         .font(.caption2.monospacedDigit())
-                        .padding(.horizontal, 5)
+                        .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 4))
+                        .glassBadge()
                         .foregroundStyle(.white)
                         .padding(5)
                 }
