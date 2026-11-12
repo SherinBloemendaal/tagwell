@@ -60,7 +60,7 @@ From 1.3.0 on, Tagwell looks for a new release once a day and offers to install 
 
 ### Download
 
-Download [`Tagwell.dmg`](https://github.com/SherinBloemendaal/tagwell/releases/latest/download/Tagwell.dmg), open it, and drag Tagwell onto the Applications folder. It runs on Apple Silicon and Intel Macs with macOS 15 or later.
+[Download Tagwell for Mac](https://sherin.dev/tagwell/download/mac) (`Tagwell-<version>.dmg`), open it, and drag Tagwell onto the Applications folder. It runs on Apple Silicon and Intel Macs with macOS 15 or later.
 
 <details>
 <summary><b>Other downloads and the first launch</b></summary>
@@ -136,11 +136,11 @@ Requires macOS 15 or later and Xcode 26 (Swift 6.2 or later). The one dependency
 ```bash
 ./build-app.sh          # build/Tagwell.app for this Mac
 UNIVERSAL=1 ./build-app.sh   # Apple Silicon and Intel in one app
-scripts/make-dmg.sh     # build/Tagwell.dmg from build/Tagwell.app
+scripts/make-dmg.sh     # build/Tagwell-<version>.dmg from build/Tagwell.app
 swift test              # run the tests
 ```
 
-Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell.dmg` and `Tagwell.zip` with `SHA256SUMS`, plus `appcast.xml`: the update feed the app reads, signed by `scripts/make-appcast.sh` with the `SPARKLE_PRIVATE_KEY` secret. The key itself lives only in 1Password ("Sparkle update signing key (Tagwell)"); the secret is a copy of it, and the script reads 1Password when run locally. Without that key no further update can be published.
+Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release workflow](.github/workflows/release.yml) tests, builds a universal `Tagwell.app`, and publishes `Tagwell-<version>.dmg` and `Tagwell.zip` with `SHA256SUMS`, plus `appcast.xml`: the update feed the app reads, signed by `scripts/make-appcast.sh` with the `SPARKLE_PRIVATE_KEY` secret. The key itself lives only in 1Password ("Sparkle update signing key (Tagwell)"); the secret is a copy of it, and the script reads 1Password when run locally. Without that key no further update can be published.
 
 <details>
 <summary><b>Project layout</b></summary>
@@ -156,7 +156,7 @@ Releases are built by GitHub Actions: push a tag like `v1.2.0` and the [Release 
 | `install.sh`           | The install script.                                                        |
 | `art/`                 | The app icon and the DMG background, as SVG.                               |
 | `scripts/make-art.sh`  | Turns `art/` into `Resources/AppIcon.icns` and the DMG background.         |
-| `scripts/make-dmg.sh`  | Builds `Tagwell.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild). |
+| `scripts/make-dmg.sh`  | Builds `Tagwell-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild). |
 | `scripts/make-appcast.sh` | Signs `Tagwell.zip` and writes the signed Sparkle feed `appcast.xml`.   |
 
 </details>

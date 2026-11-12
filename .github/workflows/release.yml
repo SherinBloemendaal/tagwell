@@ -45,9 +45,10 @@ jobs:
           set -euo pipefail
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent build/Tagwell.app dist/Tagwell.zip
-          cp build/Tagwell.dmg dist/Tagwell.dmg
+          dmg="Tagwell-${GITHUB_REF_NAME#v}.dmg"
+          cp "build/$dmg" "dist/$dmg"
           cd dist
-          shasum -a 256 Tagwell.dmg Tagwell.zip > SHA256SUMS
+          shasum -a 256 "$dmg" Tagwell.zip > SHA256SUMS
           cat SHA256SUMS
 
       - name: Sign the update and write the Sparkle feed
@@ -63,7 +64,7 @@ jobs:
           prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
           generate_release_notes: true
           files: |
-            dist/Tagwell.dmg
+            dist/Tagwell-*.dmg
             dist/Tagwell.zip
             dist/SHA256SUMS
             dist/appcast.xml
