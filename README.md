@@ -113,6 +113,13 @@ Tagwell works well for a large collection of live sets, mixes or recordings that
 | Save the selected files        | ⌘S       |
 | Save all edited files          | ⌥⌘S      |
 | Select all files in the list   | ⌘A       |
+| Search the list                | ⌘F       |
+| Show the selected files in Finder | ⇧⌘R   |
+| Show all files                 | ⌘1       |
+| Show files without an artist   | ⌘2       |
+| Add an artist folder           | ⇧⌘N      |
+
+Everything is also in the menu bar: **File** opens, saves and removes files, **Tags** holds the tools for the selected files (number tracks, file names as titles, YouTube thumbnails, cover art, renaming), **Artists** adds, remembers and forgets artist folders, and **Help** opens this page, the release notes and the issue form.
 
 Every toolbar button has a tooltip; hover over it to see what it does. An orange dot in the list marks files with unsaved changes, and Tagwell asks before quitting if there are any.
 

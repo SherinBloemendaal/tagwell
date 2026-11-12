@@ -14,7 +14,13 @@ struct TagwellApp: App {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesButton(updater: appDelegate.updater.updater)
             }
-            LibraryCommands(library: appDelegate.library)
+            FileCommands(library: appDelegate.library)
+            FindCommands(library: appDelegate.library)
+            SidebarCommands()
+            FolderCommands(library: appDelegate.library)
+            TagCommands(library: appDelegate.library)
+            ArtistCommands(library: appDelegate.library)
+            HelpCommands()
         }
     }
 }
@@ -63,29 +69,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return .terminateNow
         default:
             return .terminateCancel
-        }
-    }
-}
-
-struct LibraryCommands: Commands {
-    let library: Library
-
-    var body: some Commands {
-        CommandGroup(replacing: .newItem) {
-            Button("Open…") { library.isImporting = true }
-                .keyboardShortcut("o")
-        }
-        CommandGroup(replacing: .saveItem) {
-            Button("Save") { library.saveSelected() }
-                .keyboardShortcut("s")
-                .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
-
-            Button("Save All") { library.saveAll() }
-                .keyboardShortcut("s", modifiers: [.command, .option])
-                .disabled(library.isSaving || !library.hasUnsavedChanges)
-
-            Button("Revert") { library.revertSelected() }
-                .disabled(library.isSaving || !library.selectionHasUnsavedChanges)
         }
     }
 }

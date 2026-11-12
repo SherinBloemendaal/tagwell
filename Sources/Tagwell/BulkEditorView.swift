@@ -5,9 +5,7 @@ import SwiftUI
 /// typing in a field sets that value on every selected file.
 struct BulkEditorView: View {
     let files: [EditableFile]
-    let library: Library
-    @State private var cropThumbnails = true
-    @State private var isFetchingThumbnails = false
+    @Bindable var library: Library
 
     var body: some View {
         Form {
@@ -46,20 +44,16 @@ struct BulkEditorView: View {
                 }
                 LabeledContent("Cover art") {
                     HStack {
-                        if isFetchingThumbnails {
+                        if library.isFetchingThumbnails {
                             ProgressView()
                                 .controlSize(.small)
                         }
-                        Toggle("Square", isOn: $cropThumbnails)
+                        Toggle("Square", isOn: $library.cropsThumbnails)
                             .help("Crop each 16:9 thumbnail to a square, keeping the middle")
                         Button("YouTube Thumbnails") {
-                            isFetchingThumbnails = true
-                            Task {
-                                await library.useYouTubeThumbnails(files, cropToSquare: cropThumbnails)
-                                isFetchingThumbnails = false
-                            }
+                            Task { await library.fetchYouTubeThumbnails(for: files) }
                         }
-                        .disabled(isFetchingThumbnails)
+                        .disabled(library.isFetchingThumbnails)
                         .glassButtonStyle()
                         .help("Give each file its own video's thumbnail, using the [video ID] in its file name or a YouTube link in its comment")
                     }
@@ -87,9 +81,7 @@ struct BulkEditorView: View {
         Binding {
             files.allSatisfy { $0.rename == .fromTags }
         } set: { isOn in
-            for file in files {
-                file.rename = isOn ? .fromTags : .keep
-            }
+            library.renameFromTags(isOn, files: files)
         }
     }
 

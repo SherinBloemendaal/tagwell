@@ -103,7 +103,6 @@ struct ContentView: View {
 
 struct ArtistSidebar: View {
     @Bindable var library: Library
-    @State private var isAddingArtist = false
     @State private var newArtist = ""
 
     var body: some View {
@@ -137,17 +136,17 @@ struct ArtistSidebar: View {
         }
         .safeAreaInset(edge: .bottom) {
             HStack {
-                Button("Add Artist", systemImage: "plus") {
-                    newArtist = ""
-                    isAddingArtist = true
-                }
+                Button("Add Artist", systemImage: "plus") { library.isAddingArtist = true }
                 .glassButtonStyle(otherwise: .borderless)
                 .help("Create an artist folder you can drop files on")
                 Spacer()
             }
             .padding(10)
         }
-        .alert("Add Artist", isPresented: $isAddingArtist) {
+        .onChange(of: library.isAddingArtist) { _, isShown in
+            if isShown { newArtist = "" }
+        }
+        .alert("Add Artist", isPresented: $library.isAddingArtist) {
             TextField("Name", text: $newArtist)
             Button("Add") { library.artistMemory.remember(newArtist) }
             Button("Cancel", role: .cancel) {}
@@ -167,6 +166,7 @@ struct ArtistSidebar: View {
 
 struct FileList: View {
     @Bindable var library: Library
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         List(selection: $library.selection) {
@@ -182,6 +182,8 @@ struct FileList: View {
             }
         }
         .searchable(text: $library.searchText, prompt: "Title, artist, album or file")
+        .searchFocused($isSearchFocused)
+        .onChange(of: library.searchFocusRequests) { isSearchFocused = true }
         .overlay {
             if library.files.isEmpty {
                 Text("Drop MP3 files here")

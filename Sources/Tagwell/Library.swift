@@ -174,6 +174,14 @@ final class Library {
     var artistFilter = ArtistFilter.all
     var searchText = ""
     var isImporting = false
+    /// The "Add Artist" box is showing. Lives here so the menu bar can open it too.
+    var isAddingArtist = false
+    /// Goes up by one each time the menu bar asks for the search field; the file list focuses it.
+    private(set) var searchFocusRequests = 0
+    /// Crop YouTube thumbnails to a square when they are set on several files at once.
+    var cropsThumbnails = true
+    /// Set while thumbnails are being downloaded for several files; one download runs at a time.
+    private(set) var isFetchingThumbnails = false
     var errorMessage: String?
     /// Set while files are being saved; one save runs at a time.
     private(set) var saveProgress: SaveProgress?
@@ -247,6 +255,11 @@ final class Library {
         )
     }
 
+    /// The artist whose folder is open, when one is.
+    var openArtist: String? {
+        if case .artist(let name) = artistFilter { name } else { nil }
+    }
+
     /// Sets the artist of the dragged files. An empty name clears it (dropping on "No Artist").
     func assignArtist(_ name: String, to drag: FileDrag) {
         let ids = Set(drag.ids)
@@ -276,6 +289,28 @@ final class Library {
         for file in files {
             file.fields.title = file.baseName
         }
+    }
+
+    func removeArtwork(from files: [EditableFile]) {
+        for file in files {
+            file.fields.artwork = nil
+        }
+    }
+
+    /// Names the files "Artist - Title" when they are saved, or keeps their names.
+    func renameFromTags(_ isOn: Bool, files: [EditableFile]) {
+        for file in files {
+            file.rename = isOn ? .fromTags : .keep
+        }
+    }
+
+    /// Downloads a thumbnail for each file, cropped as `cropsThumbnails` says. A second request
+    /// while one runs is ignored.
+    func fetchYouTubeThumbnails(for files: [EditableFile]) async {
+        guard !isFetchingThumbnails else { return }
+        isFetchingThumbnails = true
+        defer { isFetchingThumbnails = false }
+        await useYouTubeThumbnails(files, cropToSquare: cropsThumbnails)
     }
 
     /// Gives each file its own YouTube thumbnail as cover art, using the video ID in its file name
@@ -345,6 +380,18 @@ final class Library {
         let ids = Set(filesToRemove.map(\.id))
         files.removeAll { ids.contains($0.id) }
         selection.subtract(ids)
+    }
+
+    func removeSelected() {
+        remove(selectedFiles)
+    }
+
+    func showSelectedInFinder() {
+        NSWorkspace.shared.activateFileViewerSelecting(selectedFiles.map(\.url))
+    }
+
+    func focusSearch() {
+        searchFocusRequests += 1
     }
 
     func revertSelected() {

@@ -195,4 +195,52 @@ struct LibraryTests {
         #expect(library.files.map(\.fields.track) == ["1/3", "2/3", "3/3"])
         #expect(library.files.map(\.fields.title) == ["Set 01", "Set 02", "Set 03"])
     }
+
+    @Test func `the menu's cover art and rename items act on the selected files only`() throws {
+        let (library, _) = makeLibrary()
+        library.add([try makeFiles(["Hardwell", "Maddix", "Hardwell"])])
+        for file in library.files {
+            file.fields.artwork = Artwork(data: Data([1, 2, 3]), mimeType: "image/png")
+        }
+        library.artistFilter = .artist("Hardwell")
+
+        library.removeArtwork(from: library.selectedFiles)
+        library.renameFromTags(true, files: library.selectedFiles)
+
+        #expect(library.files.map { $0.fields.artwork == nil } == [true, false, true])
+        #expect(library.files.map(\.rename) == [.fromTags, .keep, .fromTags])
+
+        library.renameFromTags(false, files: library.selectedFiles)
+        #expect(library.files.allSatisfy { $0.rename == .keep })
+    }
+
+    @Test func `Remove from List in the menu takes the selected files out of the list`() throws {
+        let (library, _) = makeLibrary()
+        library.add([try makeFiles(["", "", ""])])
+        library.selection = [library.files[1].id]
+
+        library.removeSelected()
+
+        #expect(library.files.map(\.name) == ["Set 01.mp3", "Set 03.mp3"])
+        #expect(library.selection.isEmpty)
+    }
+
+    @Test func `the open artist folder is what the Artists menu remembers or forgets`() throws {
+        let (library, _) = makeLibrary()
+        #expect(library.openArtist == nil)
+
+        library.artistFilter = .artist("Maddix")
+        #expect(library.openArtist == "Maddix")
+
+        library.artistFilter = .noArtist
+        #expect(library.openArtist == nil)
+    }
+
+    @Test func `Find asks the file list for the search field each time`() {
+        let (library, _) = makeLibrary()
+        library.focusSearch()
+        library.focusSearch()
+
+        #expect(library.searchFocusRequests == 2)
+    }
 }
