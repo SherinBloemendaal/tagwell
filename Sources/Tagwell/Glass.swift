@@ -20,13 +20,14 @@ extension View {
         }
     }
 
-    /// A small label floating on a picture: a dark glass capsule, or a dark plate on macOS 15.
+    /// A bar that floats over the window's content: glass, or the regular material on macOS 15.
+    /// Only for the layer of controls and messages, never for rows or pictures.
     @ViewBuilder
-    func glassBadge() -> some View {
+    func glassPanel(cornerRadius: CGFloat = 12) -> some View {
         if #available(macOS 26, *) {
-            glassEffect(.regular.tint(.black.opacity(0.35)), in: .capsule)
+            glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
         } else {
-            background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 4))
+            background(.regularMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
         }
     }
 }

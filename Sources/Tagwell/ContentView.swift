@@ -8,7 +8,7 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             ArtistSidebar(library: library)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 210)
+                .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 300)
         } content: {
             FileList(library: library)
                 .navigationSplitViewColumnWidth(min: 240, ideal: 300)
@@ -59,17 +59,6 @@ struct ContentView: View {
             library.add(urls)
             return true
         }
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { library.errorMessage != nil },
-                set: { if !$0 { library.errorMessage = nil } }
-            )
-        ) {
-            Button("OK") {}
-        } message: {
-            Text(library.errorMessage ?? "")
-        }
     }
 
     private var subtitle: String {
@@ -79,8 +68,20 @@ struct ContentView: View {
         return library.unsavedCount == 0 ? "" : "\(library.unsavedCount) unsaved"
     }
 
-    @ViewBuilder
+    /// The editor, with the one bar every problem is reported in above it.
     private var detail: some View {
+        editor
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if let message = library.errorMessage {
+                    NoticeBar(message: message) { library.errorMessage = nil }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var editor: some View {
         let selected = library.selectedFiles
         switch selected.count {
         case 0:
@@ -109,12 +110,14 @@ struct ArtistSidebar: View {
         List(selection: Binding(get: { library.artistFilter }, set: { if let filter = $0 { library.artistFilter = filter } })) {
             Section {
                 folder("All Files", systemImage: "music.note.list", filter: .all)
+                    .tag(ArtistFilter.all)
                 folder("No Artist", systemImage: "questionmark.folder", filter: .noArtist)
                     .dropDestination(for: FileDrag.self) { drags, _ in
                         drags.forEach { library.assignArtist("", to: $0) }
                         return true
                     }
                     .help("Files without an artist. Drop files here to clear their artist.")
+                    .tag(ArtistFilter.noArtist)
             }
             Section("Artists") {
                 ForEach(library.artistNames, id: \.self) { name in
@@ -131,6 +134,7 @@ struct ArtistSidebar: View {
                                 Button("Remember Artist") { library.artistMemory.remember(name) }
                             }
                         }
+                        .tag(ArtistFilter.artist(name))
                 }
             }
         }
@@ -155,10 +159,11 @@ struct ArtistSidebar: View {
         }
     }
 
+    /// A folder row. The caller adds the tag as the last modifier: a modifier after the tag
+    /// hides it from the list's selection.
     private func folder(_ title: String, systemImage: String, filter: ArtistFilter) -> some View {
         Label(title, systemImage: systemImage)
             .badge(library.fileCount(for: filter))
-            .tag(filter)
     }
 }
 
@@ -247,6 +252,7 @@ struct TagEditorView: View {
                 HStack(alignment: .top, spacing: 20) {
                     ArtworkWell(
                         artwork: $file.fields.artwork,
+                        library: library,
                         suggestedVideoID: YouTube.videoID(in: file.name, comment: file.fields.comment),
                         suggestedSearch: file.tagBasedName ?? YouTube.removingVideoID(from: file.baseName)
                     )
@@ -347,6 +353,8 @@ struct ArtistField: View {
 
 struct ArtworkWell: View {
     @Binding var artwork: Artwork?
+    /// Where a picture that can't be used is reported.
+    let library: Library
     /// The selected files have different cover art.
     var isMixed = false
     /// Video ID found in the file name or comment, to fill in the YouTube link.
@@ -355,7 +363,6 @@ struct ArtworkWell: View {
     var suggestedSearch = ""
     @State private var isImporting = false
     @State private var isPickingYouTube = false
-    @State private var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 8) {
@@ -406,16 +413,8 @@ struct ArtworkWell: View {
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.image]) { result in
             switch result {
             case .success(let url): load(url)
-            case .failure(let error): errorMessage = error.localizedDescription
+            case .failure(let error): report(error)
             }
-        }
-        .alert(
-            "This image can't be used",
-            isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })
-        ) {
-            Button("OK") {}
-        } message: {
-            Text(errorMessage ?? "")
         }
     }
 
@@ -423,7 +422,11 @@ struct ArtworkWell: View {
         do {
             artwork = try Artwork(imageFileAt: url)
         } catch {
-            errorMessage = error.localizedDescription
+            report(error)
         }
+    }
+
+    private func report(_ error: Error) {
+        library.errorMessage = "This image can't be used: \(error.localizedDescription)"
     }
 }

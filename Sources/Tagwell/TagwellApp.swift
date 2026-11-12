@@ -9,7 +9,7 @@ struct TagwellApp: App {
         Window("Tagwell", id: "main") {
             ContentView(library: appDelegate.library)
         }
-        .defaultSize(width: 1100, height: 680)
+        .defaultSize(width: 1240, height: 780)
         .commands {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesButton(updater: appDelegate.updater.updater)

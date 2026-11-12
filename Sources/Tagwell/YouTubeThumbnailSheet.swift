@@ -229,7 +229,8 @@ private struct ResultCell: View {
                         .font(.caption2.monospacedDigit())
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .glassBadge()
+                        // A plain dark plate: glass is for controls, not for what lies on a picture.
+                        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 4))
                         .foregroundStyle(.white)
                         .padding(5)
                 }

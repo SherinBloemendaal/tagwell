@@ -11,7 +11,7 @@ struct BulkEditorView: View {
         Form {
             Section {
                 HStack(alignment: .top, spacing: 20) {
-                    ArtworkWell(artwork: artworkBinding, isMixed: !allEqual(\.artwork))
+                    ArtworkWell(artwork: artworkBinding, library: library, isMixed: !allEqual(\.artwork))
                     VStack(spacing: 10) {
                         ArtistField(text: binding(\.artist), prompt: prompt(\.artist), library: library)
                         TextField("Album", text: binding(\.album), prompt: prompt(\.album))
